@@ -181,7 +181,7 @@ class TradebotController {
 	 */
 	public function processIncomingTradeMessage(string $sender, string $message): void {
 		// Don't relay join/leave messages
-		if (preg_match('/^[A-Z][a-z0-9]{3,11} has (joined|left) the private channel\./', strip_tags($message))) {
+		if (preg_match('/^[A-Z][a-z0-9-]{3,11} has (joined|left) the private channel\./', strip_tags($message))) {
 			return;
 		}
 		if (in_array($this->settingManager->get("tradebot_channel_spam"), [1, 2])) {

@@ -145,7 +145,8 @@ class TradebotController {
 	 * @Description("Relay messages from the tradebot to org/private channel")
 	 */
 	public function receiveRelayMessageExtPrivEvent(\StdClass $eventObj): void {
-		if (!$this->isTradebot($eventObj->channel)) {
+		if (!$this->isTradebot($eventObj->channel)
+			|| !$this->isTradebot($eventObj->sender)) {
 			return;
 		}
 		$this->processIncomingTradeMessage($eventObj->channel, $eventObj->message);

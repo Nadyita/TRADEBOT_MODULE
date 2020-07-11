@@ -1,12 +1,12 @@
 <?php
 
-namespace Budabot\User\Modules;
+namespace Budabot\User\Modules\TRADEBOT_MODULE;
 
 use Budabot\Core\StopExecutionException;
+use stdClass;
 
 /**
- * Authors:
- *  - Nadyita
+ * @author Nadyita (RK5) <nadyita@hodorraid.org>
  *
  * @Instance
  */
@@ -82,9 +82,10 @@ class TradebotController {
 	/**
 	 * Convert the colon-separated list of botnames into a proper array
 	 *
+	 * @param string $botNames Colon-separated list of botnames
 	 * @return string[]
 	 */
-	protected function normalizeBotNames(string $botNames): array {
+	protected function normalizeBotNames($botNames) {
 		return array_diff(
 			array_map(
 				'ucfirst',
@@ -99,8 +100,13 @@ class TradebotController {
 
 	/**
 	 * (un)subscribe from tradebot(s) when they get activated or deactivated
+	 *
+	 * @param string $setting Name of the setting that gets changed
+	 * @param string $oldValue Old value of that setting
+	 * @param string $newValue New value of that setting
+	 * @return void
 	 */
-	public function changeTradebot(string $setting, string $oldValue, string $newValue): void {
+	public function changeTradebot($setting, $oldValue, $newValue) {
 		if ($setting !== 'tradebot') {
 			return;
 		}
@@ -129,8 +135,11 @@ class TradebotController {
 
 	/**
 	 * Check if the given name is one of the configured tradebots
+	 *
+	 * @param string $botName Name of the bot to check
+	 * @return bool
 	 */
-	public function isTradebot(string $botName): bool {
+	public function isTradebot($botName) {
 		$tradebotNames = $this->normalizeBotNames($this->settingManager->get('tradebot'));
 		foreach ($tradebotNames as $tradebotName) {
 			if (preg_match("/^\Q$tradebotName\E\d*$/", $botName)) {
@@ -143,8 +152,12 @@ class TradebotController {
 	/**
 	 * @Event("extPriv")
 	 * @Description("Relay messages from the tradebot to org/private channel")
+	 *
+	 * @param \Budabot\Core\Event $eventObj
+	 * @return void
+	 * @throws \Budabot\Core\StopExecutionException
 	 */
-	public function receiveRelayMessageExtPrivEvent(\StdClass $eventObj): void {
+	public function receiveRelayMessageExtPrivEvent(stdClass $eventObj) {
 		if (!$this->isTradebot($eventObj->channel)
 			|| !$this->isTradebot($eventObj->sender)) {
 			return;
@@ -156,8 +169,11 @@ class TradebotController {
 	/**
 	 * @Event("msg")
 	 * @Description("Relay incoming tells from the tradebots to org/private channel")
+	 *
+	 * @param \Budabot\Core\Event $eventObj
+	 * @return void
 	 */
-	public function receiveMessageEvent(\StdClass $eventObj): void {
+	public function receiveMessageEvent(stdClass $eventObj) {
 		if (!$this->isTradebot($eventObj->sender)) {
 			return;
 		}
@@ -167,8 +183,12 @@ class TradebotController {
 
 	/**
 	 * Relay incoming tell-messages of tradebots to org/priv chat, so we can see errros
+	 *
+	 * @param string $sender
+	 * @param string $message
+	 * @return void
 	 */
-	public function processIncomingTradebotMessage(string $sender, string $message): void {
+	public function processIncomingTradebotMessage($sender, $message) {
 		$message = "Received message from Tradebot <highlight>$sender<end>: $message";
 		$this->chatBot->sendGuild($message, true);
 		if ($this->settingManager->get("guest_relay") == 1) {
@@ -179,8 +199,12 @@ class TradebotController {
 	/**
 	 * Relay incoming priv-messages of tradebots to org/priv chat,
 	 * but filter out join- and leave-messages of people.
+	 *
+	 * @param string $sender
+	 * @param string $message
+	 * @return void
 	 */
-	public function processIncomingTradeMessage(string $sender, string $message): void {
+	public function processIncomingTradeMessage($sender, $message) {
 		// Don't relay join/leave messages
 		if (preg_match('/^[A-Z][a-z0-9-]{3,11} has (joined|left) the private channel\./', strip_tags($message))) {
 			return;
@@ -196,8 +220,11 @@ class TradebotController {
 	/**
 	 * @Event("extJoinPrivRequest")
 	 * @Description("Accept private channel join invitation from the trade bots")
+	 *
+	 * @param \Budabot\Core\Event $eventObj
+	 * @return void
 	 */
-	public function acceptPrivJoinEvent(\StdClass $eventObj): void {
+	public function acceptPrivJoinEvent(stdClass $eventObj) {
 		$sender = $eventObj->sender;
 		if (!$this->isTradebot($sender)) {
 			return;
